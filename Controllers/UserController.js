@@ -13,34 +13,34 @@ class UserController {
       .addEventListener("click", e => {
         this.showPanelCreate();
       });
-
     this.formUpdateEl.addEventListener("submit", event => {
       event.preventDefault();
 
       let btn = this.formUpdateEl.querySelector("[type=submit]");
-
       btn.disabled = true;
 
       let values = this.getValues(this.formUpdateEl);
 
-      let index = formUpdateEl.dataUser.trIndex;
+      let index = this.formUpdateEl.dataset.trIndex;
 
       let tr = this.tableEl.rows[index];
 
-      tr.dataUser.user = JSON.stringify(values);
+      tr.dataset.user = JSON.stringify(values);
 
       tr.innerHTML = `
-      <td><img src="${values.photo}" alt="User Image" class="img-circle img-sm">
-        </td>
-        <td>${values.name}</td>
-        <td>${values.email}</td>
-        <td>${values.admin ? "Sim" : "Não"}</td>
-        <td>${Ultils.dateFormat(values.register)}</td>
-        <td>
+          <td><img src="${
+            values.photo
+          }" alt="User Image" class="img-circle img-sm"></td>
+          <td>${values.name}</td>
+          <td>${values.email}</td>
+          <td>${values.admin ? "Sim" : "Não"}</td>
+          <!-- <td>${values.register.toLocaleString()}</td> -->
+          <td>${Utils.dateFormat(values.register)}</td>
+          <td>
             <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
             <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
-        </td>
-  `;
+          </td>
+          `;
 
       this.addEventsTr(tr);
       this.updateCount();
@@ -53,7 +53,7 @@ class UserController {
 
       let btn = this.formEl.querySelector("[type=submit]");
 
-      btn.disabled = true;
+      btn.diabled = true;
 
       let values = this.getValues(this.formEl);
 
@@ -62,42 +62,43 @@ class UserController {
       this.getPhoto().then(
         content => {
           values.photo = content;
-          this.addLine(values);
+          this.addUserLine(values);
           this.formEl.reset();
-          btn.disabled = false;
+          btn.diabled = false;
         },
-
         e => {
           console.error(e);
         }
       );
     });
-    //closing onSubmit
   }
 
   getPhoto() {
     return new Promise((resolve, reject) => {
       let fileReader = new FileReader();
+
       let elements = [...this.formEl.elements].filter(item => {
         if (item.name === "photo") {
           return item;
         }
       });
+
       let file = elements[0].files[0];
+
       fileReader.onload = () => {
         resolve(fileReader.result);
       };
+
       fileReader.onerror = e => {
         reject(e);
       };
+
       if (file) {
         fileReader.readAsDataURL(file);
       } else {
         resolve("dist/img/boxed-bg.jpg");
       }
     });
-
-    //closing getPhoto
   }
 
   getValues(formEl) {
@@ -114,46 +115,50 @@ class UserController {
       }
 
       if (field.name == "gender") {
-        if (field.checked) {
-          user[field.name] = field.value;
-        }
+        if (field.checked) user[field.name] = field.value;
       } else if (field.name == "admin") {
         user[field.name] = field.checked;
       } else {
         user[field.name] = field.value;
       }
     });
-    if (!isValid) {
-      return false;
-    }
+
+    if (!isValid) return false;
+
     return new User(
       user.name,
       user.gender,
+      user.birth,
       user.country,
       user.email,
       user.password,
       user.photo,
       user.admin
     );
-    //closing getValues
   }
 
-  addLine(dataUser) {
+  addUserLine(userData) {
     let tr = document.createElement("tr");
-    tr.dataset.user = JSON.stringify(dataUser);
-    tr.innerHTML = `
-    <td><img src="${dataUser.photo}" alt="User Image" class="img-circle img-sm">
-    </td>
-    <td>${dataUser.name}</td>
-    <td>${dataUser.email}</td>
-    <td>${dataUser.admin ? "Sim" : "Não"}</td>
-    <td>${Ultils.dateFormat(dataUser.register)}</td>
-    <td>
-        <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
-        <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
-    </td>
 
-`;
+    tr.dataset.user = JSON.stringify(userData);
+
+    tr.innerHTML = `
+      <tr>
+        <td><img src="${
+          userData.photo
+        }" alt="User Image" class="img-circle img-sm"></td>
+        <td>${userData.name}</td>
+        <td>${userData.email}</td>
+        <td>${userData.admin ? "Sim" : "Não"}</td>
+        <!-- <td>${userData.register.toLocaleString()}</td> -->
+        <td>${Utils.dateFormat(userData.register)}</td>
+        <td>
+          <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
+          <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+        </td>
+      </tr>
+    `;
+
     this.addEventsTr(tr);
 
     this.tableEl.appendChild(tr);
@@ -175,19 +180,15 @@ class UserController {
           switch (field.type) {
             case "file":
               continue;
-              break;
-
             case "radio":
               field = form.querySelector(
                 "[name=" + name.replace("_", "") + "][value=" + json[name] + "]"
               );
               field.checked = true;
               break;
-
             case "checkbox":
               field.checked = json[name];
               break;
-
             default:
               field.value = json[name];
           }
@@ -207,15 +208,18 @@ class UserController {
     document.querySelector("#box-user-create").style.display = "none";
     document.querySelector("#box-user-update").style.display = "block";
   }
+
   updateCount() {
     let numberUsers = 0;
-    let numberAdmin = 0;
+    let numberAdmins = 0;
+
     [...this.tableEl.children].forEach(tr => {
       numberUsers++;
       let user = JSON.parse(tr.dataset.user);
-      if (user._admin) numberAdmin++;
+      if (user._admin) numberAdmins++;
     });
+
     document.querySelector("#number-users").innerHTML = numberUsers;
-    document.querySelector("#number-users-admin").innerHTML = numberAdmin;
+    document.querySelector("#number-users-admin").innerHTML = numberAdmins;
   }
 }
