@@ -4,16 +4,13 @@ class User {
     this._gender = gender;
     this._birth = birth;
     this._country = country;
-    this._email - email;
+    this._email = email;
     this._password = password;
     this._photo = photo;
     this._admin = admin;
     this._register = new Date();
   }
 
-  get register() {
-    return this._register;
-  }
   get name() {
     return this._name;
   }
@@ -46,7 +43,40 @@ class User {
     return this._admin;
   }
 
-  set photo(value) {
-    this._photo = value;
+  get register() {
+    return this._register;
   }
+
+  set name (name) {
+    this._name = name;
+  }
+
+  set gender (gender) {
+    this._gender = gender;
+  }
+
+  set birth (birth) {
+    this._birth = birth;
+  }
+
+  set country (country) {
+    this._country = country;
+  }
+
+  set email (email) {
+    this._email = email;
+  }
+
+  set password (password) {
+    this._password = password;
+  }
+
+  set photo (photo) {
+    this._photo = photo;
+  }
+
+  set admin (admin) {
+    this._admin = admin;
+  }
+
 }
