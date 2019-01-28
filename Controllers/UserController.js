@@ -37,25 +37,13 @@ class UserController {
           } else {
             result._photo = content;
           }
+          let user = new User();
 
-          tr.dataset.user = JSON.stringify(result);
+          user.loadFromJSON(result);
 
-          tr.innerHTML = `
-            <td><img src="${
-              result._photo
-            }" alt="User Image" class="img-circle img-sm"></td>
-              <td>${result._name}</td>
-              <td>${result._email}</td>
-              <td>${result._admin ? "Sim" : "Não"}</td>
-              <!-- <td>${result._register.toLocaleString()}</td> -->
-              <td>${Utils.dateFormat(result._register)}</td>
-              <td>
-                <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
-                <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
-            </td>
-          `;
+          user.save();
 
-          this.addEventsTr(tr);
+          this.getTr(user, tr);
 
           this.updateCount();
 
@@ -88,7 +76,7 @@ class UserController {
         content => {
           values.photo = content;
 
-          this.insert(values);
+          values.save();
 
           this.addLine(values);
 
@@ -103,6 +91,8 @@ class UserController {
     });
   }
 
+  /*getPhoto = He takes a photo of the formEl and plays it on the screen.
+   If the user does not add a photo, getPhoto adds a default photo*/
   getPhoto(formEl) {
     return new Promise((resolve, reject) => {
       let fileReader = new FileReader();
@@ -131,6 +121,7 @@ class UserController {
     });
   }
 
+  //getValues = add values in code
   getValues(formEl) {
     let user = {};
     let isValid = true;
@@ -170,8 +161,8 @@ class UserController {
   getUsersStorage() {
     let users = [];
 
-    if (sessionStorage.getItem("users")) {
-      users = JSON.parse(sessionStorage.getItem("users"));
+    if (localStorage.getItem("users")) {
+      users = JSON.parse(localStorage.getItem("users"));
     }
 
     return users;
@@ -189,16 +180,18 @@ class UserController {
     });
   }
 
-  insert(data) {
-    let users = this.getUsersStorage();
+  //addLine = adds a new line Tr in the table
+  addLine(dataUser) {
+    let tr = this.getTr(dataUser);
 
-    users.push(data);
+    this.tableEl.appendChild(tr);
 
-    sessionStorage.setItem("users", JSON.stringify(users));
+    this.updateCount();
   }
 
-  addLine(dataUser) {
-    let tr = document.createElement("tr");
+  //getTr = select which Tr we are going to generate
+  getTr(dataUser, tr = null) {
+    if (tr === null) tr = document.createElement("tr");
 
     tr.dataset.user = JSON.stringify(dataUser);
 
@@ -221,17 +214,25 @@ class UserController {
 
     this.addEventsTr(tr);
 
-    this.tableEl.appendChild(tr);
-
-    this.updateCount();
+    return tr;
   }
 
+  //addEventsTr = add buttons events to table
   addEventsTr(tr) {
     tr.querySelector(".btn-delete").addEventListener("click", e => {
       if (confirm("Deseja realmente excluir?")) {
+        let user = new User();
+
+        user.loadFromJSON(JSON.parse(tr.dataset.user));
+
+        user.remove();
+
         tr.remove();
+
+        this.updateCount();
       }
     });
+
     tr.querySelector(".btn-edit").addEventListener("click", e => {
       let json = JSON.parse(tr.dataset.user);
       this.formUpdateEl.dataset.trIndex = tr.sectionRowIndex;
